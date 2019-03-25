@@ -1,0 +1,84 @@
+# 8000 point dipoles in nve LD
+
+## Define simulation units and atom type
+units             lj
+atom_style        dipole
+
+## Set dimension and boundary conditions
+dimension 3
+boundary p p p
+
+## Create initial configuration
+#lattice		 sc 0.0000000000270
+#region 		 particles block 0 10 0 10 0 10
+#create_box	  1 particles
+#create_atoms	  1 region particles
+
+## Set simulation units masses
+#mass * 17500000
+
+## Set initial velocities
+#velocity	fluid create 159 87287 
+
+#read_restart restart.cesga4n.1000000000
+#read_restart restart.obelix.1000000
+
+## Define pair style: LJ cutoff, Coul cutoff
+pair_style dipole/cut 1.0 100.0
+
+read_data restart.data
+
+## epsilon, sigma, LJ cutoff, Coul cutoff
+pair_coeff 1 1 500.0 333.33 333.33 3333.33
+
+## Define group of colloids
+group	fluid type 1
+
+
+## Initialize dipolar atoms
+dipole 1 171756
+set group fluid dipole 0.0 0.0 1.0
+shape * 333.33 333.33 333.33
+
+## Set simulation timestep
+timestep 100 
+
+## Set neighbor list and its dynamic actualization
+neighbor        333.33 bin
+neigh_modify every 500000 delay 0 check yes one 5000 page 50000
+
+## Set ensemble thermostat and integration scheme
+## Id group langevin Tmin Tmax damp seed
+fix  1 all langevin 159 159 54.5 48279
+fix  2 all nve
+
+## Query radial distribution function (run/frequency=# files)
+## id atom-type frequency file bins atom1 atom2
+#fix 4 all rdf 100000000 rdf-500b.out 500 1 1
+#fix 5 all rdf 100000000 rdf-100b.out 100 1 1
+#fix 6 all rdf 100000000 rdf-30b.out 30 1 1
+
+## Query mean squared displacement
+#fix 7 all msd 10000000 msd.out
+
+## Query particle density profile
+#fix xprofile fluid ave/spatial 10000 1000 100000000 x center 30.0 density/number file xprofile.dat
+#fix yprofile fluid ave/spatial 10000 1000 100000000 y center 30.0 density/number file yprofile.dat
+#fix zprofile fluid ave/spatial 10000 1000 100000000 z center 30.0 density/number file zprofile.dat
+
+## Query dump files and configuration
+dump system all atom 500000 dump.fluid
+dump_modify system scale no
+
+## Query restart files generation
+restart 10000000 restart.ft16n.*
+#restart 100000 restart.obelix.*
+
+## Query thermodynamic averages every "N" timesteps
+thermo_style custom step temp pe ke etotal
+thermo_modify flush yes
+thermo 1000000
+#thermo 1
+
+## Set simulation run
+run 1000000000 
