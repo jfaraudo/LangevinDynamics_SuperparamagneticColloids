@@ -1,0 +1,60 @@
+# 8000 point dipoles in nve with Langevin dynamics
+
+## Define simulation units and atom type
+units             lj
+atom_style        dipole
+
+## Set dimension and boundary conditions
+dimension 3
+boundary p p p
+
+#read_restart restart.cesga4n.1000000000
+#read_restart restart.obelix.1000000
+
+## Define pair style: LJ cutoff, Coul cutoff
+pair_style dipole/cut 1.0 1.0
+
+read_data restart.data
+
+## Set initial velocities
+#velocity	fluid create 159.3 87287 
+
+## epsilon, sigma, LJ cutoff, Coul cutoff
+pair_coeff 1 1 500.0 333.3 333.3 1666.7
+
+## Define group of colloids
+group	fluid type 1
+
+## Initialize dipolar atoms
+dipole 1 210358
+set group fluid dipole 0.0 0.0 1.0
+shape * 333.3 333.3 333.3
+
+## Set simulation timestep
+timestep 100 
+
+## Set neighbor list and its dynamic actualization
+neighbor        333.3 bin
+neigh_modify every 8000 delay 0 check yes one 5000 page 50000
+
+## Set ensemble thermostat and integration scheme
+## Id group langevin Tmin Tmax damp seed
+fix  1 all langevin 159.3 159.3 54.5 48279
+fix  2 all nve
+
+## Query dump files and configuration
+dump system all atom 50000 dump.fluid
+#dump_modify system scale no
+
+## Query restart files generation
+restart 50000000 restart.cesga.*
+#restart 100000 restart.obelix.*
+
+## Query thermodynamic averages every "N" timesteps
+thermo_style custom step temp pe ke etotal
+thermo_modify flush yes
+thermo 1000000
+
+
+## Set simulation run
+run  500000000 upto
