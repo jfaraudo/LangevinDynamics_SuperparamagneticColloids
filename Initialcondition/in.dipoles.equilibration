@@ -1,0 +1,75 @@
+# Equilibration (no magnetic force) of 1000 dipoles in nve with Langevin dynamics
+
+## Define simulation units and atom type
+units             lj
+atom_style        dipole
+
+## Set dimension and boundary conditions
+dimension 3
+boundary p p p
+
+## Create initial configuration
+lattice		 sc 0.0000000013500
+region 		 particles block 0 20 0 20 0 20
+create_box	  1 particles
+create_atoms	  1 region particles
+
+## Define group of colloids
+group	fluid type 1
+
+## Set simulation units masses
+mass * 17500000
+
+## Set initial velocities
+velocity	fluid create 159 87287 
+
+## Define pair style: LJ cutoff, Coul cutoff
+pair_style dipole/cut 1.0 100.0
+## epsilon, sigma, LJ cutoff, Coul cutoff
+pair_coeff 1 1 500.0 333.33 333.33 333.33
+
+## Initialize dipolar atoms
+dipole 1 0.0
+set group fluid dipole 0.0 0.0 1.0
+shape * 333.33 333.33 333.33
+
+## Set simulation timestep
+timestep 100 
+
+## Set neighbor list and its dynamic actualization
+neighbor        333.33 bin
+neigh_modify every 5000 delay 0 check yes one 5000 page 50000
+
+## Set ensemble thermostat and integration scheme
+## Id group langevin Tmin Tmax damp seed
+fix  1 all langevin 159 159 54.5 48279
+fix  2 all nve
+
+## Query radial distribution function (run/frequency=# files)
+## id atom-type frequency file bins atom1 atom2
+#fix 4 all rdf 100000000 rdf-500b.out 500 1 1
+
+
+## Query mean squared displacement
+fix 7 all msd 100000 msd.out
+
+## Query particle density profile
+#fix xprofile fluid ave/spatial 100000 1000 100000000 x center 30.0 density/number file xprofile.dat
+#fix yprofile fluid ave/spatial 100000 1000 100000000 y center 30.0 density/number file yprofile.dat
+#fix zprofile fluid ave/spatial 100000 1000 100000000 z center 30.0 density/number file zprofile.dat
+
+## Query dump files and configuration
+dump system all atom 1000000 dump.fluid
+#dump_modify system scale no
+
+## Query restart files generation
+#restart 1000000 restart.svgd4n.*
+#restart 1000000 restart.cesga4n.*
+restart 100000 restart.obelix.*
+
+## Query thermodynamic averages every "N" timesteps
+thermo_style custom step temp pe ke etotal
+thermo               100000
+
+## Set simulation run
+run 10000000 upto
