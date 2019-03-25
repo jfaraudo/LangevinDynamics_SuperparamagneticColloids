@@ -15,7 +15,7 @@ Plase cite the following references when using the present files:
 
 1) Jordi S. Andreu, Juan Camacho and Jordi Faraudo, Soft Matter, 2011, vol 7, 2336 (original reference)
 
-2) Jordi Faraudo, Jordi S. Andreu, Carles Calero and Juan Camacho, 2016, vol 14, 3837 (review)
+2) Jordi Faraudo, Jordi S. Andreu, Carles Calero and Juan Camacho, Advanced Functional Materials 2016, vol 14, 3837 (review)
 
 
 
