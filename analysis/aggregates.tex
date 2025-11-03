@@ -1,0 +1,51 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{geometry} % see geometry.pdf on how to lay out the page. There's lots.
+\usepackage{hyperref}
+\geometry{a4paper} % or letter or a5paper or ... etc
+% \geometry{landscape} % rotated page geometry
+
+% See the ``Article customise'' template for come common customisations
+
+\title{}
+\author{Jordi Andreu Segura}
+\date{} % delete this line to display the current date
+
+%%% BEGIN DOCUMENT
+\begin{document}
+\section{Introduction}
+The objective with the \emph{aggregates.cpp} program is to evaluate the time evolution of aggregates from Langevin Dynamics simulations. The systems of interest are defined as a collection of individual particles (\emph{beads}0
+ of size $\sigma=2R$. These beads interact via two different particle-particle interactions. In one hand, in order to avoid overlapping between different beads, a Lennard-Jone type potential is defined, through two different parameters, $\sigma_{LJ}$ the distance at which the energy decays to zero and $\epsilon_{LJ}$ corresponding to the depth of the potential well. In the other hand, magnetic dipole-dipole interaction between beads is implemented by defining a point dipolar moment for each bead, located at its geometrical center. The Lennard-Jones parameters are chosen to prevent the overlapping of beads but, at same time, to keep an aggregation contact distance close to its diameter, trying to emulate each bead as a hard sphere model.
+
+The program uses the dump files obtained from LAMMPS in which, for each timestep selected, each particle position is stores as well as its id from LAMMPS.
+
+\section{Algorithm}
+The basic idea behind the algorithm is the following. First of all, we have to define a contact distance $d_c$ between beads in the sense that if the distance between two beads is smaller or equal to this value, then we will say that they belong to the same aggregate. Lets say $d(i,j)$ is the distance between two beads. Then, if $d(i,j)\leq d_c$ then we add the bead $j$ in the neighbor list of bead $i$, and vice versa. So, for each timestep we need to compute the neighbor list for any individual bead on the system.
+
+All the beads are stored in a main array so, each element of the array is a bead object. The neighbor list is an array of pointers to bead, so, each element of this neighbor array is pointing tho the memory address of any neighbor bead. The function which performs this operation in the algorithm is called \emph{GetConnections()}.\par
+
+The next step is to count the size of each aggregate. The procedure is the following:
+\begin{enumerate}
+	\item Select the (first) bead in the main array and set its internal state to \emph{check}.
+	\item If its neighbor list is empty, the bead counts as an aggregate with size 1, and an aggregate id is assigned to it. We reset the aggregate size counter to zero and restart from 1. If the neighbor list is not empty, we sum 1 to the aggregate size counter,  set the internal state of the bead to \emph{check}, select the first neighbor of this last bead and we repeat this step.
+\end{enumerate}
+
+The two functions used to accomplish this task are \emph{GetSize(\&bead[i],i,size,aggid)} and \emph{CountAgregates()}. During the counting, the number of aggregates of each size is stored in an array called \emph{hist} and results are stored at each timestep. So, after processing each configuration, all the variables are reset to default values.
+
+\section{Outputs}
+Four different output files are stored:
+\begin{enumerate}
+	\item [hist.txt] Column-formatted file. The first column corresponds to the timestep. The, the second column corresponds to the number of aggregates of size 1 (i.e. individual beads), and so on.
+	\item [norm.txt] Is the same \emph{hist.txt} file, but the number of aggregates have been normalized by the number of aggregates at this timestep.
+	\item [stdmean.txt] Stores the mean aggregate size at each timestep, defined as:
+	$$s(t)=\frac{\sum_ssn_s(t)}{\sum_sn_s(t)}$$
+	\item [s-mean.txt] Stores the average (mass) aggregate size defined as:
+	$$S(t)=\frac{\sum_ss^2n_s(t)}{\sum_ssn_s(t)}$$
+\end{enumerate}
+
+
+%\bibliographystyle{unsrt}
+%\bibliographystyle{acm}
+%\bibliography{aggregation}
+
+\end{document}
